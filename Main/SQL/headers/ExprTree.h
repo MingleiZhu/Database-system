@@ -137,7 +137,7 @@ public:
 	}
 
 	string toString () {
-		return "[" + tableName + "_" + attName + "]";
+		return "[" + attName + "]";
 	}	
 
 	string getId () {

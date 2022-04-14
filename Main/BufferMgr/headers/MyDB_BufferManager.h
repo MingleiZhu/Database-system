@@ -75,6 +75,8 @@ public:
 	// also removes the physical file from disk, and gets rid of the FD
 	void killTable (MyDB_TablePtr killMe);
 
+    size_t getNumPages();
+
 private:
 
 	// tells us the LRU number of each of the pages

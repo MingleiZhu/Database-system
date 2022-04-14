@@ -2,9 +2,14 @@
 #ifndef LOG_OP_H
 #define LOG_OP_H
 
+#include <algorithm>
 #include "MyDB_Stats.h"
 #include "MyDB_TableReaderWriter.h"
 #include "ExprTree.h"
+#include "RegularSelection.h"
+#include "ScanJoin.h"
+#include "SortMergeJoin.h"
+
 
 
 // create a smart pointer for database tables
@@ -88,9 +93,9 @@ public:
 	//    first attribute in outputSpec, the second item in exprsToComput corresponds to the second attribute, etc.
 	//	
 	LogicalJoin (LogicalOpPtr leftInputOp, LogicalOpPtr rightInputOp, MyDB_TablePtr outputSpec,
-		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute) : leftInputOp (leftInputOp),
+		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute, MyDB_BufferManagerPtr myMgr) : leftInputOp (leftInputOp),
 		rightInputOp (rightInputOp), outputSpec (outputSpec), outputSelectionPredicate (outputSelectionPredicate),
-		exprsToCompute (exprsToCompute) {}
+		exprsToCompute (exprsToCompute), myMgr(myMgr) {}
 			
 	// this costs the entire query plan with the join at the top, returning the compute set of statistics for
 	// the output.  Note that it recursively costs the left and then the right, before using the statistics from
@@ -111,6 +116,7 @@ private:
 	MyDB_TablePtr outputSpec;
 	vector <ExprTreePtr> outputSelectionPredicate;
 	vector <ExprTreePtr> exprsToCompute;
+    MyDB_BufferManagerPtr myMgr;
 
 };
 
@@ -133,8 +139,8 @@ public:
 	//    of attributes that we are asking for from a base table
 	//
 	LogicalTableScan (MyDB_TableReaderWriterPtr inputSpec, MyDB_TablePtr outputSpec, MyDB_StatsPtr inputStats, 
-		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute) : inputSpec (inputSpec), outputSpec (outputSpec),
-		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute) {}
+		vector <ExprTreePtr> &selectionPred, vector <string> &exprsToCompute, MyDB_BufferManagerPtr myMgr) : inputSpec (inputSpec), outputSpec (outputSpec),
+		inputStats (inputStats), selectionPred (selectionPred), exprsToCompute (exprsToCompute), myMgr(myMgr) {}
 
 	// this costs the table scan returning the compute set of statistics for the output
 	pair <double, MyDB_StatsPtr> cost ();
@@ -153,6 +159,7 @@ private:
 	MyDB_StatsPtr inputStats;
     vector <ExprTreePtr> selectionPred;
 	vector <string> exprsToCompute;
+    MyDB_BufferManagerPtr myMgr;
 };
 
 #endif

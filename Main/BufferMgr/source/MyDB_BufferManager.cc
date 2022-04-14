@@ -28,6 +28,10 @@ size_t MyDB_BufferManager :: getPageSize () {
 	return pageSize;
 }
 
+size_t MyDB_BufferManager ::getNumPages() {
+    return numPages;
+}
+
 MyDB_PageHandle MyDB_BufferManager :: getPage (MyDB_TablePtr whichTable, long i) {
 		
 	// open the file, if it is not open

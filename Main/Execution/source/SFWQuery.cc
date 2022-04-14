@@ -8,7 +8,8 @@
 // 
 // note that this implementation only works for two-table queries that do not have an aggregation
 // 
-LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
+LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters,
+                                                MyDB_BufferManagerPtr myMgr) {
 
 	// first, make sure we have exactly two tables... this prototype only works on two tables!!
 	if (tablesToProcess.size () != 2) {
@@ -74,8 +75,8 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 			}
 		}
 		if (needIt) {
-			leftSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
-			totSchema->getAtts ().push_back (make_pair (tablesToProcess[0].second + "_" + b.first, b.second));
+			leftSchema->getAtts ().push_back (make_pair (b.first, b.second));
+			totSchema->getAtts ().push_back (make_pair (b.first, b.second));
 			leftExprs.push_back ("[" + b.first + "]");
 			cout << "left expr: " << ("[" + b.first + "]") << "\n";
 		}
@@ -97,8 +98,8 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 			}
 		}
 		if (needIt) {
-			rightSchema->getAtts ().push_back (make_pair (tablesToProcess[1].second + "_" + b.first, b.second));
-			totSchema->getAtts ().push_back (make_pair (tablesToProcess[1].second + "_" + b.first, b.second));
+			rightSchema->getAtts ().push_back (make_pair (b.first, b.second));
+			totSchema->getAtts ().push_back (make_pair (b.first, b.second));
 			rightExprs.push_back ("[" + b.first + "]");
 			cout << "right expr: " << ("[" + b.first + "]") << "\n";
 		}
@@ -119,12 +120,12 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
 	// and it's time to build the query plan
 	LogicalOpPtr leftTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[0].first], 
 		make_shared <MyDB_Table> ("leftTable", "leftStorageLoc", leftSchema), 
-		make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs);
+		make_shared <MyDB_Stats> (leftTable, tablesToProcess[0].second), leftCNF, leftExprs, myMgr);
 	LogicalOpPtr rightTableScan = make_shared <LogicalTableScan> (allTableReaderWriters[tablesToProcess[1].first], 
 		make_shared <MyDB_Table> ("rightTable", "rightStorageLoc", rightSchema), 
-		make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs);
+		make_shared <MyDB_Stats> (rightTable, tablesToProcess[1].second), rightCNF, rightExprs, myMgr);
 	LogicalOpPtr returnVal = make_shared <LogicalJoin> (leftTableScan, rightTableScan, 
-		make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect);
+		make_shared <MyDB_Table> ("topTable", "topStorageLoc", topSchema), topCNF, valuesToSelect, myMgr);
 
 	// done!!
 	return returnVal;

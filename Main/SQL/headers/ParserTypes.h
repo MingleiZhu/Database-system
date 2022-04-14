@@ -238,8 +238,8 @@ public:
 		return myTableToCreate.addToCatalog (storageDir, addToMe);
 	}		
 	
-	LogicalOpPtr buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters) {
-		return myQuery.buildLogicalQueryPlan (allTables, allTableReaderWriters);
+	LogicalOpPtr buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr) {
+		return myQuery.buildLogicalQueryPlan (allTables, allTableReaderWriters, myMgr);
 	}
 
 	void printSFWQuery () {

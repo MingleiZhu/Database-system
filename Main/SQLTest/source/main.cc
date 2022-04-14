@@ -106,6 +106,7 @@ int main (int numArgs, char **args) {
 						// and record the tuple various counts
 						allTableReaderWriters[tokens[1]]->getTable ()->setDistinctValues (res.first);
 						allTableReaderWriters[tokens[1]]->getTable ()->setTupleCount (res.second);
+                        allTableReaderWriters[tokens[1]]->getTable()->putInCatalog(myCatalog);
 						break;
 					}
 				}
@@ -162,10 +163,22 @@ int main (int numArgs, char **args) {
 
 					} else if (final->isSFWQuery ()) {
 
-						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters);
+						LogicalOpPtr myPlan = final->buildLogicalQueryPlan (allTables, allTableReaderWriters, myMgr);
 						if (myPlan != nullptr) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
+
+                            MyDB_TableReaderWriterPtr output = myPlan->execute();
+
+                            // print the first 30 records
+                            MyDB_RecordPtr temp = output->getEmptyRecord();
+                            MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
+                            int i = 0;
+                            while (myIter->advance () && i < 30) {
+                                myIter->getCurrent (temp);
+                                cout << temp << "\n";
+                                i++;
+                            }
 						}
 					}
 

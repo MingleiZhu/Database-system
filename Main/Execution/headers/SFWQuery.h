@@ -32,7 +32,7 @@ public:
 	// allTables: this is the list of all of the tables currently in the system
 	// allTableReaderWriters: this is so we can store the info that we need to be able to execute the query
 	LogicalOpPtr buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, 
-		map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters);
+		map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
 
 	~SFWQuery () {}
 
