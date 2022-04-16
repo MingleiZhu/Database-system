@@ -83,6 +83,7 @@ MyDB_Catalog :: MyDB_Catalog (string fNameIn) {
 	// try to open the file
 	string line;
 	ifstream myfile (fName);
+	cout << "If we created " << fName << ": " << myfile.is_open()<< endl;
 
 	// if we opened it, read the contents
 	if (myfile.is_open()) {

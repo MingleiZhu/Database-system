@@ -14,8 +14,68 @@ using namespace std;
 // Note that after the left and right hand sides have been executed, the temporary tables associated with the two 
 // sides should be deleted (via a kill to killFile () on the buffer manager)
 MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
-	return nullptr;
+    MyDB_TableReaderWriterPtr selectionTable = inputOp->execute();
 
+    vector <pair <MyDB_AggType, string>> aggsToCompute;
+    vector <string> groups;
+
+    for (auto a : exprsToCompute) {
+        if (a->isAvg()) {
+            aggsToCompute.push_back(make_pair(MyDB_AggType::Avg, "* (" + a->getChild()->toString() + ", double[1.0])"));
+        }
+        else if (a->isSum()) {
+            aggsToCompute.push_back(make_pair(MyDB_AggType::Sum, a->getChild()->toString()));
+        }
+    }
+
+    for (auto b : groupings) {
+        groups.push_back(b->toString());
+    }
+
+    MyDB_SchemaPtr aggregateSchema = make_shared<MyDB_Schema>();
+
+    MyDB_RecordPtr myRec = selectionTable->getEmptyRecord();
+    for (string g : groups) {
+        aggregateSchema->appendAtt(make_pair(g.substr(1, g.length() - 2), myRec->getType(g)));
+    }
+
+    for (auto a : exprsToCompute) {
+        if (a->isAvg()) {
+            aggregateSchema->appendAtt(make_pair(to_string(hash<string>()(a->toString())), make_shared <MyDB_DoubleAttType> ()));
+        }
+        else if (a->isSum()) {
+            aggregateSchema->appendAtt(make_pair(to_string(hash<string>()(a->toString())), make_shared<MyDB_IntAttType>()));
+        }
+    }
+
+
+
+    MyDB_TableReaderWriterPtr aggregationTable = make_shared<MyDB_TableReaderWriter>(
+            make_shared<MyDB_Table>("aggregateTable", "aggregateLoc", aggregateSchema), myMgr);
+
+    Aggregate aggOp(selectionTable, aggregationTable, aggsToCompute, groups, "bool[true]");
+    aggOp.run();
+
+    // regular selection from aggregate table
+    MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, myMgr);
+
+    vector<string> projections;
+    for (auto a : exprsToCompute) {
+        if (a->isSum() || a->isAvg()) {
+            projections.push_back("[" + to_string(hash<string>()(a->toString()))+ "]");
+        }
+        else {
+            projections.push_back(a->toString());
+        }
+    }
+
+    RegularSelection rsOp(aggregationTable, outputTable, "bool[true]", projections);
+    rsOp.run();
+
+    myMgr->killTable(selectionTable->getTable());
+    myMgr->killTable(aggregationTable->getTable());
+
+    return outputTable;
 }
 // we don't really count the cost of the aggregate, so cost its subplan and return that
 pair <double, MyDB_StatsPtr> LogicalAggregate :: cost () {
@@ -40,11 +100,9 @@ pair <double, MyDB_StatsPtr> LogicalJoin :: cost () {
 MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
 	MyDB_TableReaderWriterPtr outputTable = make_shared<MyDB_TableReaderWriter>(outputSpec, myMgr);
 
-    cout << "getting leftTable" << endl;
     MyDB_TableReaderWriterPtr leftTable = leftInputOp->execute();
-    cout << "getting rightTable" << endl;
     MyDB_TableReaderWriterPtr rightTable = rightInputOp->execute();
-    cout << "finish executing children plan" << endl;
+
     int minPageNum = min (leftTable->getNumPages(), rightTable->getNumPages());
 
     vector<pair<string, string>> equalityChecks;

@@ -9,6 +9,7 @@
 #include "RegularSelection.h"
 #include "ScanJoin.h"
 #include "SortMergeJoin.h"
+#include "Aggregate.h"
 
 
 
@@ -52,8 +53,8 @@ public:
 	// groupings: the various GROUP BY computations we need to perform
 	//
 	LogicalAggregate (LogicalOpPtr inputOp, MyDB_TablePtr outputSpec, vector <ExprTreePtr> &exprsToCompute, 
-		vector <ExprTreePtr> &groupings) : inputOp (inputOp), outputSpec (outputSpec), exprsToCompute (exprsToCompute),
-		groupings (groupings) {}
+		vector <ExprTreePtr> &groupings, MyDB_BufferManagerPtr myMgr) : inputOp (inputOp), outputSpec (outputSpec), exprsToCompute (exprsToCompute),
+		groupings (groupings), myMgr(myMgr) {}
 	
 	// fill this out!  This should actually run the aggregation via an appropriate RelOp, and then it is going to
 	// have to unscramble the output attributes and compute exprsToCompute using an execution of the RegularSelection 
@@ -73,6 +74,7 @@ private:
 	MyDB_TablePtr outputSpec;
 	vector <ExprTreePtr> exprsToCompute;
 	vector <ExprTreePtr> groupings;
+    MyDB_BufferManagerPtr myMgr;
 
 };
 	

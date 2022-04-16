@@ -651,6 +651,8 @@ public:
 		return true;
 	}
 
+    ExprTreePtr getChild () {return child;}
+
 	bool referencesTable (string alias) {
 		return child->referencesTable (alias);
 	}
@@ -682,6 +684,8 @@ public:
 	bool isAvg () {
 		return true;
 	}
+
+    ExprTreePtr getChild () {return child;}
 
 	bool referencesTable (string alias) {
 		return child->referencesTable (alias);

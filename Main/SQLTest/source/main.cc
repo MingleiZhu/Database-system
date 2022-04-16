@@ -10,6 +10,7 @@
 #include <sstream>
 #include <algorithm>
 #include <iterator>
+#include <chrono>
 
 using namespace std;
 string toLower (string data) {
@@ -168,17 +169,32 @@ int main (int numArgs, char **args) {
 							auto res = myPlan->cost ();
 							cout << "cost was " << res.first << "\n";
 
+                            auto start = chrono::high_resolution_clock::now();
+
                             MyDB_TableReaderWriterPtr output = myPlan->execute();
+
+                            auto stop = chrono::high_resolution_clock::now();
 
                             // print the first 30 records
                             MyDB_RecordPtr temp = output->getEmptyRecord();
                             MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
-                            int i = 0;
-                            while (myIter->advance () && i < 30) {
+                            int count = 0;
+                            cout << "Query output:" << endl;
+                            while (myIter->advance ()) {
                                 myIter->getCurrent (temp);
-                                cout << temp << "\n";
-                                i++;
+                                if (count < 30) {
+                                    cout << temp << "\n";
+                                }
+                                count++;
                             }
+
+                            cout << "Total number of output records:" << count << endl;
+
+                            auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+                            cout << "Time taken by query: "
+                                 << duration.count() << " microseconds" << endl;
+
+                            myMgr->killTable(output->getTable());
 						}
 					}
 
