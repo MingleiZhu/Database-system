@@ -24,6 +24,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
     }
 
     if (tablesToProcess.size() == 1) {
+        // there is aggregation in the sql
         if (groupingClauses.size() != 0 || areAggs) {
             return buildLogicalOneTableWithAggQueryPlan(allTables, allTableReaderWriters, myMgr);
         }
@@ -34,6 +35,11 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
     }
 
     else if (tablesToProcess.size() == 2) {
+//        // there is aggregation in the sql
+//        if (groupingClauses.size() != 0 || areAggs) {
+//            return buildLogicalOneTableWithAggQueryPlan(allTables, allTableReaderWriters, myMgr);
+//        }
+
         return buildLogicalQueryJoinPlan(allTables, allTableReaderWriters, myMgr);
     }
 
@@ -108,7 +114,7 @@ LogicalOpPtr SFWQuery ::buildLogicalOneTableWithAggQueryPlan(map<string, MyDB_Ta
     int i = 0;
     for (auto a : valuesToSelect) {
         if (a->isSum()) {
-            outputSchema->getAtts().push_back(make_pair("att_" + to_string(i++), make_shared <MyDB_IntAttType> ()));
+            outputSchema->getAtts().push_back(make_pair("att_" + to_string(i++), myRec.getType(a->getChild()->toString())));
         }
 
         else if (a->isAvg()) {

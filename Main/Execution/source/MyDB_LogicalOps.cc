@@ -44,7 +44,7 @@ MyDB_TableReaderWriterPtr LogicalAggregate :: execute () {
             aggregateSchema->appendAtt(make_pair(to_string(hash<string>()(a->toString())), make_shared <MyDB_DoubleAttType> ()));
         }
         else if (a->isSum()) {
-            aggregateSchema->appendAtt(make_pair(to_string(hash<string>()(a->toString())), make_shared<MyDB_IntAttType>()));
+            aggregateSchema->appendAtt(make_pair(to_string(hash<string>()(a->toString())), myRec->getType(a->getChild()->toString())));
         }
     }
 
