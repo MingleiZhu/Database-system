@@ -149,7 +149,13 @@ int main (int numArgs, char **args) {
 
 						string tableName = final->addToCatalog (args[2], myCatalog);
 						if (tableName != "nothing") {
-							allTables = MyDB_Table :: getAllTables (myCatalog);
+                            if (allTables.count(tableName) == 0) {
+                                cout << "create new table:" << tableName << endl;
+                                MyDB_TablePtr newTable = make_shared<MyDB_Table>();
+                                newTable->fromCatalog(tableName, myCatalog);
+                                allTables[tableName] = newTable;
+                            }
+
 							if (allTables [tableName]->getFileType () == "heap") {
 								allTableReaderWriters[tableName] = 
 									make_shared <MyDB_TableReaderWriter> (allTables [tableName], myMgr);

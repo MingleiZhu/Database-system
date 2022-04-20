@@ -95,7 +95,7 @@ public:
 	//    first attribute in outputSpec, the second item in exprsToComput corresponds to the second attribute, etc.
 	//	
 	LogicalJoin (LogicalOpPtr leftInputOp, LogicalOpPtr rightInputOp, MyDB_TablePtr outputSpec,
-		vector <ExprTreePtr> &outputSelectionPredicate, vector <ExprTreePtr> &exprsToCompute, MyDB_BufferManagerPtr myMgr) : leftInputOp (leftInputOp),
+		vector <ExprTreePtr> &outputSelectionPredicate, vector <string> &exprsToCompute, MyDB_BufferManagerPtr myMgr) : leftInputOp (leftInputOp),
 		rightInputOp (rightInputOp), outputSpec (outputSpec), outputSelectionPredicate (outputSelectionPredicate),
 		exprsToCompute (exprsToCompute), myMgr(myMgr) {}
 			
@@ -117,7 +117,7 @@ private:
 	LogicalOpPtr rightInputOp;
 	MyDB_TablePtr outputSpec;
 	vector <ExprTreePtr> outputSelectionPredicate;
-	vector <ExprTreePtr> exprsToCompute;
+	vector <string> exprsToCompute;
     MyDB_BufferManagerPtr myMgr;
 
 };

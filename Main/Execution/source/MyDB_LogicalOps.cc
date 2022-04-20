@@ -107,7 +107,6 @@ MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
 
     vector<pair<string, string>> equalityChecks;
     string finalPredicate;
-    vector<string> projections;
     for (auto& predicate : outputSelectionPredicate) {
         if (predicate->isEq()) {
             string lhs = predicate->getLHS()->toString();
@@ -134,16 +133,13 @@ MyDB_TableReaderWriterPtr LogicalJoin :: execute () {
         }
     }
 
-    for (auto& value : exprsToCompute) {
-        projections.push_back(value->toString());
-    }
 
     if (minPageNum <= myMgr->getNumPages() / 2) {
-        ScanJoin scanJoin(leftTable, rightTable, outputTable, finalPredicate, projections, equalityChecks, "bool[true]", "bool[true]");
+        ScanJoin scanJoin(leftTable, rightTable, outputTable, finalPredicate, exprsToCompute, equalityChecks, "bool[true]", "bool[true]");
         scanJoin.run();
     }
     else {
-        SortMergeJoin sortMergeJoin(leftTable, rightTable, outputTable, finalPredicate, projections, equalityChecks.back(), "bool[true]", "bool[true]");
+        SortMergeJoin sortMergeJoin(leftTable, rightTable, outputTable, finalPredicate, exprsToCompute, equalityChecks.back(), "bool[true]", "bool[true]");
         sortMergeJoin.run();
     }
 

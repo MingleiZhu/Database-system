@@ -155,8 +155,10 @@ bool MyDB_Table :: fromCatalog (string tableNameIn, MyDB_CatalogPtr catalog) {
 	allCounts.clear ();
 	vector <string> temp;
 	catalog->getStringList (tableName + ".valCounts", temp);
-	for (auto a : temp)
-		allCounts.push_back (stoull(a));
+	for (auto a : temp) {
+        allCounts.push_back (stoull(a));
+    }
+
 
 	// get the number of tuples
 	catalog->getInt (tableName + ".numTuples", count);

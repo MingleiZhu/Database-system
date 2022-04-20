@@ -35,12 +35,7 @@ LogicalOpPtr SFWQuery :: buildLogicalQueryPlan (map <string, MyDB_TablePtr> &all
     }
 
     else if (tablesToProcess.size() == 2) {
-//        // there is aggregation in the sql
-//        if (groupingClauses.size() != 0 || areAggs) {
-//            return buildLogicalOneTableWithAggQueryPlan(allTables, allTableReaderWriters, myMgr);
-//        }
-
-        return buildLogicalQueryJoinPlan(allTables, allTableReaderWriters, myMgr);
+        return buildLogicalMultipleTablesPlan(allTables, allTableReaderWriters, myMgr);
     }
 
 }
@@ -132,20 +127,9 @@ LogicalOpPtr SFWQuery ::buildLogicalOneTableWithAggQueryPlan(map<string, MyDB_Ta
     return aggregate;
 }
 
-LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &allTables,
+LogicalOpPtr SFWQuery::buildLogicalMultipleTablesPlan(map<string, MyDB_TablePtr> &allTables,
                                                  map<string, MyDB_TableReaderWriterPtr> &allTableReaderWriters,
                                                  MyDB_BufferManagerPtr myMgr) {
-    // also, make sure that there are no aggregates in herre
-    bool areAggs = false;
-    for (auto a: valuesToSelect) {
-        if (a->hasAgg()) {
-            areAggs = true;
-        }
-    }
-    if (groupingClauses.size() != 0 || areAggs) {
-        cout << "Sorry, we can't handle aggs or groupings yet!\n";
-        return nullptr;
-    }
 
     // find the two input tables
     MyDB_TablePtr leftTable = allTables[tablesToProcess[0].first];
@@ -178,6 +162,7 @@ LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &all
     MyDB_SchemaPtr totSchema = make_shared<MyDB_Schema>();
     vector<string> leftExprs;
     vector<string> rightExprs;
+    vector<string> totExprs;
 
     // and see what we need from the left, and from the right
     for (auto b: leftTable->getSchema()->getAtts()) {
@@ -196,6 +181,7 @@ LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &all
             leftSchema->getAtts().push_back(make_pair(b.first, b.second));
             totSchema->getAtts().push_back(make_pair(b.first, b.second));
             leftExprs.push_back("[" + b.first + "]");
+            totExprs.push_back("[" + b.first + "]");
             cout << "left expr: " << ("[" + b.first + "]") << "\n";
         }
     }
@@ -219,6 +205,7 @@ LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &all
             rightSchema->getAtts().push_back(make_pair(b.first, b.second));
             totSchema->getAtts().push_back(make_pair(b.first, b.second));
             rightExprs.push_back("[" + b.first + "]");
+            totExprs.push_back("[" + b.first + "]");
             cout << "right expr: " << ("[" + b.first + "]") << "\n";
         }
     }
@@ -226,14 +213,6 @@ LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &all
 
     // now we gotta figure out the top schema... get a record for the top
     MyDB_Record myRec(totSchema);
-
-    // and get all of the attributes for the output
-    MyDB_SchemaPtr topSchema = make_shared<MyDB_Schema>();
-    int i = 0;
-    for (auto a: valuesToSelect) {
-        topSchema->getAtts().push_back(make_pair("att_" + to_string(i++), myRec.getType(a->toString())));
-    }
-    cout << "top schema: " << topSchema << "\n";
 
     // and it's time to build the query plan
     LogicalOpPtr leftTableScan = make_shared<LogicalTableScan>(allTableReaderWriters[tablesToProcess[0].first],
@@ -244,12 +223,66 @@ LogicalOpPtr SFWQuery::buildLogicalQueryJoinPlan(map<string, MyDB_TablePtr> &all
                                                                 make_shared<MyDB_Table>("rightTable", "rightStorageLoc", rightSchema),
                                                                 make_shared<MyDB_Stats>(rightTable, tablesToProcess[1].second),
                                                                 rightCNF, rightExprs, myMgr);
-    LogicalOpPtr returnVal = make_shared<LogicalJoin>(leftTableScan, rightTableScan,
-                                                      make_shared<MyDB_Table>("topTable", "topStorageLoc", topSchema),
-                                                              topCNF, valuesToSelect, myMgr);
 
-    // done!!
-    return returnVal;
+    bool areAggs = false;
+    for (auto a: valuesToSelect) {
+        if (a->hasAgg()) {
+            areAggs = true;
+        }
+    }
+
+    if (groupingClauses.size() != 0 || areAggs) {
+        // there is aggregations in sql
+
+        MyDB_SchemaPtr outputSchema = make_shared<MyDB_Schema>();
+        int i = 0;
+        for (auto a : valuesToSelect) {
+            if (a->isSum()) {
+                outputSchema->getAtts().push_back(make_pair("att_" + to_string(i++), myRec.getType(a->getChild()->toString())));
+            }
+
+            else if (a->isAvg()) {
+                outputSchema->getAtts().push_back(make_pair("att_" + to_string(i++), make_shared <MyDB_DoubleAttType> ()));
+            }
+
+            else {
+                outputSchema->getAtts().push_back(make_pair("att_" + to_string(i++), myRec.getType(a->toString())));
+            }
+        }
+
+        LogicalOpPtr joinResult = make_shared<LogicalJoin>(leftTableScan, rightTableScan,
+                                                            make_shared<MyDB_Table>("joinTable", "joinStorageLoc", totSchema),
+                                                                    topCNF, totExprs, myMgr);
+
+        LogicalOpPtr aggregatePlan = make_shared<LogicalAggregate>(joinResult, make_shared<MyDB_Table>("outputTable", "outputStorageLoc", outputSchema),
+                                                                   valuesToSelect, groupingClauses, myMgr);
+
+        return aggregatePlan;
+    }
+    else {
+        // there is no aggregation in sql
+
+        // and get all of the attributes for the output
+        MyDB_SchemaPtr topSchema = make_shared<MyDB_Schema>();
+        int i = 0;
+        for (auto a: valuesToSelect) {
+            topSchema->getAtts().push_back(make_pair("att_" + to_string(i++), myRec.getType(a->toString())));
+        }
+        cout << "top schema: " << topSchema << "\n";
+
+        vector <string> exprsToCompute;
+        for (auto a : valuesToSelect) {
+            exprsToCompute.push_back(a->toString());
+        }
+
+        LogicalOpPtr returnVal = make_shared<LogicalJoin>(leftTableScan, rightTableScan,
+                                                          make_shared<MyDB_Table>("topTable", "topStorageLoc", topSchema),
+                                                          topCNF, exprsToCompute, myMgr);
+
+        // done!!
+        return returnVal;
+    }
+
 }
 
 void SFWQuery :: print () {
