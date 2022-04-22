@@ -185,7 +185,7 @@ int main (int numArgs, char **args) {
                             MyDB_RecordPtr temp = output->getEmptyRecord();
                             MyDB_RecordIteratorAltPtr myIter = output->getIteratorAlt();
                             int count = 0;
-                            cout << "Query output:" << endl;
+                            cout << "Query output (print at most the first 30 records from the output file):" << endl;
                             while (myIter->advance ()) {
                                 myIter->getCurrent (temp);
                                 if (count < 30) {
@@ -194,11 +194,11 @@ int main (int numArgs, char **args) {
                                 count++;
                             }
 
-                            cout << "Total number of output records:" << count << endl;
+                            cout << "The number of records resulting from running the query:" << count << endl;
 
-                            auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
-                            cout << "Time taken by query: "
-                                 << duration.count() << " microseconds" << endl;
+                            auto duration = chrono::duration_cast<chrono::seconds>(stop - start);
+                            cout << "Time taken to run the query: "
+                                 << duration.count() << " seconds" << endl;
 
                             myMgr->killTable(output->getTable());
 						}
