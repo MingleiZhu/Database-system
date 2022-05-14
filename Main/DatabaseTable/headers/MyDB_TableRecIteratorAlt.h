@@ -1,13 +1,5 @@
 
 
-/****************************************************
-** COPYRIGHT 2016, Chris Jermaine, Rice University **
-**                                                 **
-** The MyDB Database System, COMP 530              **
-** Note that this file contains SOLUTION CODE for  **
-** A2.  You should not be looking at this file     **
-** unless you have completed A2!                   **
-****************************************************/
 
 
 #ifndef TABLE_REC_ITER_ALT_H

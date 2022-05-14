@@ -16,6 +16,15 @@ private:
 	vector <ExprTreePtr> allDisjunctions;
 	vector <ExprTreePtr> groupingClauses;
 
+    LogicalOpPtr buildLogicalMultipleTablesPlan (map <string, MyDB_TablePtr> &allTables,
+                                                 map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
+
+    LogicalOpPtr buildLogicalOneTableQueryPlan (map <string, MyDB_TablePtr> &allTables,
+                                                map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
+
+    LogicalOpPtr buildLogicalOneTableWithAggQueryPlan (map <string, MyDB_TablePtr> &allTables,
+                                                       map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
+
 public:
 	SFWQuery () {}
 
@@ -33,15 +42,6 @@ public:
 	// allTableReaderWriters: this is so we can store the info that we need to be able to execute the query
 	LogicalOpPtr buildLogicalQueryPlan (map <string, MyDB_TablePtr> &allTables, 
 		map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
-
-    LogicalOpPtr buildLogicalMultipleTablesPlan (map <string, MyDB_TablePtr> &allTables,
-                                            map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
-
-    LogicalOpPtr buildLogicalOneTableQueryPlan (map <string, MyDB_TablePtr> &allTables,
-                                            map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
-
-    LogicalOpPtr buildLogicalOneTableWithAggQueryPlan (map <string, MyDB_TablePtr> &allTables,
-                                                map <string, MyDB_TableReaderWriterPtr> &allTableReaderWriters, MyDB_BufferManagerPtr myMgr);
 
 
 
