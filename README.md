@@ -1,6 +1,3 @@
-# A7
-Group Members:
-<br>
-Minglei Zhu (mz46)
-<br>
-Emory Lin (zl103)
+# Relational Database Management System
+Implemented a relational database management system with C++, the system is used to efficiently store, retrieve,
+and run various queries on a large amount of data.
